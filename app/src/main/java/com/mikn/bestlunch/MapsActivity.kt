@@ -27,6 +27,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var latitude = 0.0
     private var longitude = 0.0
 
+
     private lateinit var mMap: GoogleMap
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,8 +38,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
     }
-
-
 
     override fun onStart() {
         super.onStart()
