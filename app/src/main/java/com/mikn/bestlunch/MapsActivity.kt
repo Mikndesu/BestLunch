@@ -7,9 +7,11 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.*
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -18,6 +20,10 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.mikn.bestlunch.model.GurunabiAPI
+import com.mikn.bestlunch.model.GurunaviAPiService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var mLocationRequest: LocationRequest? = null
@@ -27,8 +33,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var latitude = 0.0
     private var longitude = 0.0
 
-
     private lateinit var mMap: GoogleMap
+    private lateinit var locationCallback: LocationCallback
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +44,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val response = GurunaviAPiService().getRestaurant()
+            response?.run {
+                this.rest.forEach {
+                    Log.d("tag", it.toString())
+                }
+            }
+        }
     }
 
     override fun onStart() {
@@ -75,7 +91,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun registerLocationListener() {
         // initialize location callback object
-        val locationCallback = object : LocationCallback() {
+        locationCallback = object : LocationCallback() {
             @SuppressLint("MissingPermission")
             override fun onLocationResult(locationResult: LocationResult?) {
                 mMap.isMyLocationEnabled = true
@@ -84,12 +100,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         // add permission if android version is greater then 23
         if (Build.VERSION.SDK_INT >= 23 && checkPermission()) {
-            LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, locationCallback, Looper.myLooper())
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+            fusedLocationClient.requestLocationUpdates(mLocationRequest, locationCallback, null)
         }
     }
 
     private fun onLocationChanged(location: Location) {
-        // create message for toast with updated latitude and longitudefa
+        // create message for toast with updated latitude and longitude
         val msg = "Updated Location: " + location.latitude + " , " + location.longitude
 
         // show toast message with updated location
@@ -99,6 +116,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // mGoogleMap.clear()
         // mGoogleMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15.0f))
+        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     private fun checkPermission(): Boolean {
