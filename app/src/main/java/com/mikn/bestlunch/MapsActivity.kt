@@ -44,15 +44,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            val response = GurunaviAPiService().getRestaurant()
-            response?.run {
-                this.rest.forEach {
-                    Log.d("tag", it.toString())
-                }
-            }
-        }
     }
 
     override fun onStart() {
@@ -61,9 +52,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-
         mMap = googleMap;
-
         mMap.addMarker(MarkerOptions().position(LatLng(latitude, longitude)).title("Current Location"))
     }
 
@@ -116,6 +105,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // mGoogleMap.clear()
         // mGoogleMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15.0f))
+        lifecycleScope.launch(Dispatchers.IO) {
+            val response = GurunaviAPiService().getRestaurant(location.latitude, location.longitude)
+            response?.run {
+                this.rest.forEach {
+                    Log.d("tag", it.toString())
+                }
+            }
+        }
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
