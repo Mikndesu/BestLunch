@@ -7,7 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
 
-class GurunaviAPiService {
+class GurunabiAPIService {
     private val BASEURL = "https://api.gnavi.co.jp/"
 
     private val moshi = Moshi.Builder()

@@ -6,7 +6,6 @@ import android.location.Location
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -20,8 +19,8 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.mikn.bestlunch.model.GurunabiAPI
-import com.mikn.bestlunch.model.GurunaviAPiService
+import com.mikn.bestlunch.model.GurunabiAPIService
+import com.mikn.bestlunch.Hubeny
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -106,10 +105,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         // mGoogleMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15.0f))
         lifecycleScope.launch(Dispatchers.IO) {
-            val response = GurunaviAPiService().getRestaurant(location.latitude, location.longitude)
+            val response = GurunabiAPIService().getRestaurant(location.latitude, location.longitude)
             response?.run {
                 this.rest.forEach {
-                    Log.d("tag", it.toString())
+                    if(it.latitude.toDoubleOrNull() == null || it.longitude.toDoubleOrNull() == null) {} else {
+                        val hubeny = Hubeny(location.latitude, location.longitude, it.latitude.toDouble(), it.longitude.toDouble())
+                        Log.d("Info", "name: ${it.name}, latitude: ${it.latitude}, longitude: ${it.longitude}, distance: ${hubeny.distance()/1000}km")
+                    }
                 }
             }
         }
