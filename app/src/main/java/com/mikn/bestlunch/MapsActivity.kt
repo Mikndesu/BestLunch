@@ -18,6 +18,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.mikn.bestlunch.model.GurunabiAPIService
 import kotlinx.coroutines.Dispatchers
@@ -25,12 +26,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
-    private var mLocationRequest: LocationRequest? = null
     private val UPDATE_INTERVAL = (10 * 1000).toLong()
     private val FASTEST_INTERVAL: Long = 2000
 
     private var latitude = 0.0
     private var longitude = 0.0
+    private var mLocationRequest: LocationRequest? = null
+    private var requestResult: MutableList<List<String>> = mutableListOf(listOf())
 
     private lateinit var mMap: GoogleMap
     private lateinit var locationCallback: LocationCallback
@@ -51,8 +53,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap;
+        mMap = googleMap
         mMap.addMarker(MarkerOptions().position(LatLng(latitude, longitude)).title("Current Location"))
+        mMap.setOnMarkerClickListener {
+            val list = it.tag as List<String>
+            Log.d("Test", list[1])
+            return@setOnMarkerClickListener true
+        }
     }
 
     private fun startLocationUpdates() {
@@ -96,25 +103,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun onLocationChanged(location: Location) {
         // create message for toast with updated latitude and longitude
         val msg = "Updated Location: " + location.latitude + " , " + location.longitude
-
         // show toast message with updated location
         Toast.makeText(this,msg, Toast.LENGTH_LONG).show()
-
         val currentLocation = LatLng(location.latitude, location.longitude)
         // mGoogleMap.clear()
         // mGoogleMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15.0f))
         lifecycleScope.launch(Dispatchers.IO) {
             val response = GurunabiAPIService().getRestaurant(location.latitude, location.longitude, "")
+            requestResult.clear()
             response?.run {
                 this.rest.forEach {
-                    if(it.latitude.toDoubleOrNull() == null || it.longitude.toDoubleOrNull() == null) {} else {
+                    if (it.latitude.toDoubleOrNull() != null && it.longitude.toDoubleOrNull() != null) {
                         val hubeny = Hubeny(location.latitude, location.longitude, it.latitude.toDouble(), it.longitude.toDouble())
-                        Log.d("Info", "name: ${it.name}, latitude: ${it.latitude}, longitude: ${it.longitude}, distance: ${hubeny.distance()/1000}km")
-                        withContext(Dispatchers.Main) {
-                            mMap.addMarker(MarkerOptions().position(LatLng(it.latitude.toDouble(), it.longitude.toDouble())).title("Show in ${it.name}"))
-                        }
+                        requestResult.add(listOf("${it.name}", "${it.latitude}", "${it.longitude}", "${hubeny.distance()/1000}km", "${it.id}"))
                     }
+                }
+            }
+            requestResult.shuffle()
+            withContext(Dispatchers.Main) {
+                for(index in 0..2) {
+                    mMap.addMarker(MarkerOptions().position(LatLng((requestResult[index][1]).toDouble(), (requestResult[index][2]).toDouble())).title("Marker in ${requestResult[index][0]}")).tag = listOf(requestResult[index][3],
+                        requestResult[index][4])
                 }
             }
         }
