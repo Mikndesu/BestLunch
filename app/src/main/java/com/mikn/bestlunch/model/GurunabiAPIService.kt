@@ -20,7 +20,7 @@ class GurunabiAPIService {
         .build()
         .create(GurunabiAPI::class.java)
 
-    fun getRestaurant(latitude:Double, longitude:Double, category:String): StoreInfo? {
+    fun getRestaurant(latitude:Double, longitude:Double, category:String = ""): StoreInfo? {
         val queryParams: Map<String, String> = mapOf(
             "keyid" to "da2541d0286020a43695e9d28baa0b28",
             "latitude" to latitude.toString(),
@@ -28,6 +28,24 @@ class GurunabiAPIService {
             "range" to "5",
             "hit_per_page" to "50",
             "category_l" to category
+        )
+        try {
+            val response = api.getRestaurant(queryParams).execute()
+            if (response.isSuccessful) {
+                return response.body()
+            } else {
+                Log.d("tag", "GET ERROR")
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
+    fun getSpecifiedRestaurant(id: String): StoreInfo? {
+        val queryParams: Map<String, String> = mapOf(
+            "keyid" to "da2541d0286020a43695e9d28baa0b28",
+            "id" to id
         )
         try {
             val response = api.getRestaurant(queryParams).execute()

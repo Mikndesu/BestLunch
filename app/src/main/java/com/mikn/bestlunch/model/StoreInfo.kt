@@ -34,7 +34,8 @@ data class Rest(
     val tel_sub: String,
     val update_date: String,
     val url: String,
-    val url_mobile: String
+    val url_mobile: String,
+    @Transient var distance: Double = 0.0
 )
 
 data class AttributesX(

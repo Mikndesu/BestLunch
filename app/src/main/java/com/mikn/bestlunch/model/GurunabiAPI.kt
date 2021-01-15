@@ -8,4 +8,5 @@ import retrofit2.http.QueryMap
 interface GurunabiAPI {
     @GET("RestSearchAPI/v3")
     fun getRestaurant(@QueryMap params: Map<String, String>) : Call<StoreInfo>
+    fun getSpecifiedRestaurant(@QueryMap id: String) : Call<SpecifiedStoreInfo>
 }
