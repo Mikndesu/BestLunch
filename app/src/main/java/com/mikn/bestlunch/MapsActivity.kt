@@ -16,9 +16,12 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.mikn.bestlunch.adapter.CustomInfoWindowAdapter
 import com.mikn.bestlunch.model.GurunabiAPIService
 import com.mikn.bestlunch.model.Rest
+import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -30,8 +33,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var latitude = 0.0
     private var longitude = 0.0
     private var mLocationRequest: LocationRequest? = null
+    private var customInfoAdapter: CustomInfoWindowAdapter? = null
 
-    //    private var requestResult: MutableList<List<String>> = mutableListOf(listOf())
     private var requestResult: MutableList<Rest> = mutableListOf()
 
     private lateinit var mMap: GoogleMap
@@ -44,6 +47,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        apiRequest.setOnClickListener {
+            mMap.clear()
+            registerLocationListener()
+        }
     }
 
     override fun onStart() {
@@ -56,10 +63,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.addMarker(
             MarkerOptions().position(LatLng(latitude, longitude)).title("Current Location")
         )
-        mMap.setOnMarkerClickListener {
-            val list = it.tag as List<String>
-            return@setOnMarkerClickListener true
-        }
+        customInfoAdapter = CustomInfoWindowAdapter(this@MapsActivity)
+        mMap.setInfoWindowAdapter(customInfoAdapter)
     }
 
     private fun startLocationUpdates() {
@@ -127,10 +132,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             withContext(Dispatchers.Main) {
                 for (index in 0..2) {
                     val it = requestResult[index]
-                    mMap.addMarker(
-                        MarkerOptions().position(returnLatLng(it.latitude, it.longitude))
-                            .title("Marker in ${it.name}")
-                    ).tag = listOf(it.distance, it.id)
+                    var mMarker: Marker = mMap.addMarker(MarkerOptions().position(returnLatLng(it.latitude, it.longitude)).title("Marker in ${it.name}"))
+                    mMarker.tag = listOf(it.distance, it.id)
                 }
             }
         }
