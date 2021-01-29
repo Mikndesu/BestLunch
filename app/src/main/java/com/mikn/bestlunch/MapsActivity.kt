@@ -132,8 +132,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             withContext(Dispatchers.Main) {
                 for (index in 0..2) {
                     val it = requestResult[index]
-                    var mMarker: Marker = mMap.addMarker(MarkerOptions().position(returnLatLng(it.latitude, it.longitude)).title("Marker in ${it.name}"))
-                    mMarker.tag = listOf(it.distance, it.id)
+                    mMap.addMarker(MarkerOptions().position(returnLatLng(it.latitude, it.longitude)))
                 }
             }
         }

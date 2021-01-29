@@ -2,7 +2,6 @@ package com.mikn.bestlunch.adapter
 
 import android.app.Activity
 import android.content.Context
-import android.net.Uri
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
