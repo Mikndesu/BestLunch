@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -16,11 +17,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.mikn.bestlunch.adapter.CustomInfoWindowAdapter
-import com.mikn.bestlunch.model.GurunabiAPIService
-import com.mikn.bestlunch.model.Rest
+import com.mikn.bestlunch.model.HotPepperAPIService
+import com.mikn.bestlunch.model.Shop
 import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -35,7 +35,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var mLocationRequest: LocationRequest? = null
     private var customInfoAdapter: CustomInfoWindowAdapter? = null
 
-    private var requestResult: MutableList<Rest> = mutableListOf()
+    private var requestResult: MutableList<Shop> = mutableListOf()
 
     private lateinit var mMap: GoogleMap
     private lateinit var locationCallback: LocationCallback
@@ -116,27 +116,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15.0f))
         lifecycleScope.launch(Dispatchers.IO) {
             val response =
-                GurunabiAPIService().getRestaurant(location.latitude, location.longitude, "")
+                HotPepperAPIService().getRestaurant(location.latitude, location.longitude)
             requestResult.clear()
             response?.run {
-                this.rest.forEach {
-                    if (it.latitude.toDoubleOrNull() != null && it.longitude.toDoubleOrNull() != null) {
+                this.results.shop.forEach {
+                    if (it.lat != null && it.lng != null) {
                         val hubeny =
-                            Hubeny(location.latitude, location.longitude, it.latitude, it.longitude)
+                            Hubeny(location.latitude, location.longitude, it.lat, it.lng)
                         it.distance = hubeny.distance() / 1000
                         requestResult.add(it)
                     }
                 }
-            }
-            requestResult.shuffle()
-            withContext(Dispatchers.Main) {
-                for (index in 0..2) {
-                    val it = requestResult[index]
-                    mMap.addMarker(MarkerOptions().position(returnLatLng(it.latitude, it.longitude)))
+                requestResult.shuffle()
+                withContext(Dispatchers.Main) {
+                    for (index in 0..2) {
+                        val it = requestResult[index]
+                        mMap.addMarker(MarkerOptions().position(LatLng(it.lat, it.lng)))
+                    }
                 }
             }
+            fusedLocationClient.removeLocationUpdates(locationCallback)
         }
-        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     private fun checkPermission(): Boolean {
@@ -171,9 +171,5 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 registerLocationListener()
             }
         }
-    }
-
-    private fun returnLatLng(lat: String, lon: String): LatLng {
-        return LatLng(lat.toDouble(), lon.toDouble())
     }
 }

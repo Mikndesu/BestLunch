@@ -7,11 +7,11 @@ public class Hubeny {
     private final double lat2;
     private final double lon2;
 
-    Hubeny(double lat1, double lon1, String lat2, String lon2) {
+    Hubeny(double lat1, double lon1, double lat2, double lon2) {
         this.lat1 = degToRad(lat1);
         this.lon1 = degToRad(lon1);
-        this.lat2 = degToRad(Double.parseDouble(lat2));
-        this.lon2 = degToRad(Double.parseDouble(lon2));
+        this.lat2 = degToRad(lat2);
+        this.lon2 = degToRad(lon2);
     }
 
     // convert latitude and longitude to rad

@@ -8,11 +8,11 @@ import android.widget.TextView
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Marker
 import com.mikn.bestlunch.R
-import com.mikn.bestlunch.model.Rest
+import com.mikn.bestlunch.model.Shop
 
 class CustomInfoWindowAdapter(context: Context) : GoogleMap.InfoWindowAdapter {
     private val window: View = (context as Activity).layoutInflater.inflate(R.layout.info_window, null)
-    private var restList: MutableList<Rest> = mutableListOf()
+    private var restList: MutableList<Shop> = mutableListOf()
 
     override fun getInfoWindow(marker: Marker): View {
         render(marker, window)
@@ -24,7 +24,7 @@ class CustomInfoWindowAdapter(context: Context) : GoogleMap.InfoWindowAdapter {
         return null
     }
 
-    fun updateList(list: MutableList<Rest>) {
+    fun updateList(list: MutableList<Shop>) {
         restList = list
     }
 
