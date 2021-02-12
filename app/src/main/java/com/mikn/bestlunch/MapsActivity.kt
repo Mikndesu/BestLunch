@@ -118,7 +118,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             val response =
                 HotPepperAPIService().getRestaurant(location.latitude, location.longitude)
             requestResult.clear()
-            response?.run {
+            response?.apply {
                 this.results.shop.forEach {
                     if (it.lat != null && it.lng != null) {
                         val hubeny =
@@ -127,12 +127,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         requestResult.add(it)
                     }
                 }
-                requestResult.shuffle()
+
                 withContext(Dispatchers.Main) {
+                    requestResult.shuffle()
                     for (index in 0..2) {
                         val it = requestResult[index]
                         mMap.addMarker(MarkerOptions().position(LatLng(it.lat, it.lng)))
                     }
+customInfoAdapter?.updateList(requestResult.take(3))
                 }
             }
             fusedLocationClient.removeLocationUpdates(locationCallback)

@@ -12,7 +12,7 @@ import com.mikn.bestlunch.model.Shop
 
 class CustomInfoWindowAdapter(context: Context) : GoogleMap.InfoWindowAdapter {
     private val window: View = (context as Activity).layoutInflater.inflate(R.layout.info_window, null)
-    private var restList: MutableList<Shop> = mutableListOf()
+    private var restList: List<Shop> = mutableListOf()
 
     override fun getInfoWindow(marker: Marker): View {
         render(marker, window)
@@ -24,7 +24,7 @@ class CustomInfoWindowAdapter(context: Context) : GoogleMap.InfoWindowAdapter {
         return null
     }
 
-    fun updateList(list: MutableList<Shop>) {
+    fun updateList(list: List<Shop>) {
         restList = list
     }
 
