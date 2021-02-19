@@ -1,5 +1,6 @@
 package com.mikn.bestlunch
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
@@ -30,9 +31,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val UPDATE_INTERVAL = (10 * 1000).toLong()
     private val FASTEST_INTERVAL: Long = 2000
 
-    private var latitude = 0.0
-    private var longitude = 0.0
     private var mLocationRequest: LocationRequest? = null
+    private var isSetUpCamera = false
+    private var isDisplayPermissionDialog = false
+    private var currentLocation = LatLng(0.00, 0.00);
     private var customInfoAdapter: CustomInfoWindowAdapter? = null
 
     private var requestResult: MutableList<Shop> = mutableListOf()
@@ -49,7 +51,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
         apiRequest.setOnClickListener {
             mMap.clear()
-            registerLocationListener()
+            fetchRest()
         }
     }
 
@@ -60,9 +62,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        mMap.addMarker(
-            MarkerOptions().position(LatLng(latitude, longitude)).title("Current Location")
-        )
         customInfoAdapter = CustomInfoWindowAdapter(this@MapsActivity)
         mMap.setInfoWindowAdapter(customInfoAdapter)
     }
@@ -98,23 +97,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 onLocationChanged(locationResult!!.lastLocation)
             }
         }
-        // add permission if android version is greater then 23
-        if (Build.VERSION.SDK_INT >= 23 && checkPermission()) {
+
+        if (checkPermission()) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
             fusedLocationClient.requestLocationUpdates(mLocationRequest, locationCallback, null)
         }
     }
 
     private fun onLocationChanged(location: Location) {
-        // create message for toast with updated latitude and longitude
-        val msg = "Updated Location: " + location.latitude + " , " + location.longitude
-        // show toast message with updated location
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
-        val currentLocation = LatLng(location.latitude, location.longitude)
-        // mGoogleMap.clear()
-        // mGoogleMap.addMarker(MarkerOptions().position(currentLocation).title("Current Location"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15.0f))
+        currentLocation = LatLng(location.latitude, location.longitude)
+        if(!isSetUpCamera) {
+            isSetUpCamera = true
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15.0f))
+        }
+    }
+
+    private fun fetchRest() {
         lifecycleScope.launch(Dispatchers.IO) {
+            val location = currentLocation
             val response =
                 HotPepperAPIService().getRestaurant(location.latitude, location.longitude)
             requestResult.clear()
@@ -132,9 +132,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     requestResult.shuffle()
                     for (index in 0..2) {
                         val it = requestResult[index]
-                        mMap.addMarker(MarkerOptions().position(LatLng(it.lat, it.lng)))
+                        val maker = mMap.addMarker(MarkerOptions().position(LatLng(it.lat, it.lng)))
+                        maker.tag = index
                     }
-customInfoAdapter?.updateList(requestResult.take(3))
+                    customInfoAdapter?.updateList(requestResult.take(3))
                 }
             }
             fusedLocationClient.removeLocationUpdates(locationCallback)
@@ -149,15 +150,21 @@ customInfoAdapter?.updateList(requestResult.take(3))
         ) {
             true
         } else {
+            if(!isDisplayPermissionDialog){
+                Toast.makeText(this,
+                    " Please allow the access to your location for this APP.", Toast.LENGTH_LONG).show();
+                isDisplayPermissionDialog = true
+            }
             requestPermissions()
             false
         }
     }
 
     private fun requestPermissions() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf("Manifest.permission.ACCESS_FINE_LOCATION"),
+        ActivityCompat.requestPermissions(this,
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            ),
             1
         )
     }
