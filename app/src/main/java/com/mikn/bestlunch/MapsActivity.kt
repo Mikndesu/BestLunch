@@ -2,8 +2,10 @@ package com.mikn.bestlunch
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -64,6 +66,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap = googleMap
         customInfoAdapter = CustomInfoWindowAdapter(this@MapsActivity)
         mMap.setInfoWindowAdapter(customInfoAdapter)
+        mMap.setOnInfoWindowClickListener {
+            val shop = requestResult[it.tag as Int]
+            val uri = Uri.parse(shop.urls.pc)
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+        }
     }
 
     private fun startLocationUpdates() {

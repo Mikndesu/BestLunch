@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.os.Handler
+import android.util.Log
 import android.view.View
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
@@ -58,5 +59,6 @@ class CustomInfoWindowAdapter(private val context: Context) : GoogleMap.InfoWind
             .into(window.image)
 
         view.title.text = shop.name
+        Log.d("url", shop.urls.toString())
     }
 }
