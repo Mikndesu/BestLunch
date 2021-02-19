@@ -2,15 +2,21 @@ package com.mikn.bestlunch.adapter
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.drawable.Drawable
+import android.os.Handler
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Marker
 import com.mikn.bestlunch.R
 import com.mikn.bestlunch.model.Shop
+import kotlinx.android.synthetic.main.info_window.view.*
 
-class CustomInfoWindowAdapter(context: Context) : GoogleMap.InfoWindowAdapter {
+class CustomInfoWindowAdapter(private val context: Context) : GoogleMap.InfoWindowAdapter {
     private val window: View = (context as Activity).layoutInflater.inflate(R.layout.info_window, null)
     private var restList: List<Shop> = mutableListOf()
 
@@ -20,6 +26,8 @@ class CustomInfoWindowAdapter(context: Context) : GoogleMap.InfoWindowAdapter {
     }
 
     override fun getInfoContents(marker: Marker): View? {
+        val isRedraw = marker != null && marker.isInfoWindowShown
+        if (isRedraw) marker.showInfoWindow()
         render(marker, window)
         return null
     }
@@ -29,21 +37,26 @@ class CustomInfoWindowAdapter(context: Context) : GoogleMap.InfoWindowAdapter {
     }
 
     private fun render(marker: Marker, view: View) {
-        view.findViewById<ImageView>(R.id.fujiImageView).setImageResource(R.drawable.ic_launcher_background)
-        var title: String? = marker.title
-        val titleUi = view.findViewById<TextView>(R.id.title)
-        if(title != null) {
-            titleUi.text = title
-        } else {
-            titleUi.text = ""
-        }
+        val shop = restList[marker.tag as Int]
 
-        val snippet:String? = marker.snippet
-        val snippetUi = view.findViewById<TextView>(R.id.snippet)
-        if(snippet != null) {
-            snippetUi.text = snippet
-        } else {
-            snippetUi.text = ""
-        }
+        Glide.with(context)
+            .load(shop.photo.mobile.l)
+            .listener(object : RequestListener<Drawable> {
+                override fun onLoadFailed(p0: GlideException?, p1: Any?, p2: Target<Drawable>?, p3: Boolean): Boolean {
+                    getInfoContents(marker)
+                    return false
+                }
+                override fun onResourceReady(p0: Drawable?, p1: Any?, p2: Target<Drawable>?, p3: DataSource?, p4: Boolean): Boolean {
+                    if(DataSource.MEMORY_CACHE != p3) {
+                        Handler().postDelayed({
+                            getInfoContents(marker)
+                        }, 100)
+                    }
+                    return false
+                }
+            })
+            .into(window.image)
+
+        view.title.text = shop.name
     }
 }
